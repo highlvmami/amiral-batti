@@ -105,11 +105,17 @@ const MIME: Record<string, string> = {
   ".css": "text/css",
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon",
+  ".woff2": "font/woff2",
 };
 
 const http = createServer(async (req, res) => {
   if (req.url === "/api/info") {
-    res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ addresses: lanAddresses(), port: PORT }));
+    res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+        addresses: lanAddresses(),
+        port: PORT,
+        online: [...players.values()].filter((p) => p.send).length,
+        rooms: rooms.size,
+      }));
     return;
   }
   const path = normalize(decodeURIComponent((req.url ?? "/").split("?")[0])).replace(/^(\.\.[/\\])+/, "");

@@ -1,3 +1,4 @@
+import "@fontsource-variable/bricolage-grotesque";
 import "./styles.css";
 import type { LobbyPlayer, RoomView, ServerMessage } from "../../shared/protocol.js";
 import {
@@ -11,7 +12,8 @@ import {
   type ShipType,
 } from "../../shared/rules.js";
 import { Connection } from "./net.js";
-import { shipElement, type ShipState } from "./ships.js";
+import { flagElement, flagLetters } from "./flags.js";
+import { shipDrawing, shipElement, type ShipState } from "./ships.js";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const COLS = "ABCDEFGHIJ";
@@ -19,14 +21,13 @@ const COLS = "ABCDEFGHIJ";
 // ---------- Settings (theme, sound) ----------
 
 const THEMES = [
-  { id: "gece", name: "Gece", colors: ["#0b1424", "#3fa7ff"] },
-  { id: "deniz", name: "Deniz", colors: ["#04303a", "#ffd166"] },
-  { id: "acik", name: "Açık", colors: ["#eef3f9", "#1f6feb"] },
-  { id: "gunbatimi", name: "Gün batımı", colors: ["#24132b", "#ff9f43"] },
+  { id: "sis", name: "Sis", colors: ["#E9F0EE", "#0E7C86"] },
+  { id: "deniz", name: "Deniz", colors: ["#0B2F38", "#F2B632"] },
+  { id: "gece", name: "Gece", colors: ["#0F1B2D", "#4DA3FF"] },
 ];
 
 const settings = {
-  theme: localStorage.getItem("ab-theme") ?? "gece",
+  theme: THEMES.some((t) => t.id === localStorage.getItem("ab-theme")) ? localStorage.getItem("ab-theme")! : "sis",
   sound: localStorage.getItem("ab-sound") !== "off",
 };
 
@@ -89,8 +90,11 @@ let view: RoomView | null = null;
 let myName = localStorage.getItem("ab-name") ?? "";
 const inviteCode = new URLSearchParams(location.search).get("oda")?.toUpperCase() ?? null;
 
+let everConnected = false;
 const conn = new Connection(onMessage, (on) => {
+  everConnected ||= on;
   $("conn").classList.toggle("on", on);
+  $("conn").classList.toggle("lost", !on && everConnected);
   if (!on) {
     online = [];
     incoming = [];
@@ -220,24 +224,78 @@ function renderLobby() {
   );
 }
 
-async function loadLanInfo() {
+interface ServerInfo {
+  addresses: string[];
+  online: number;
+  rooms: number;
+}
+
+async function refreshInfo() {
+  const dot = $("live-dot");
+  const text = $("live-text");
   try {
-    const info = (await (await fetch("/api/info")).json()) as { addresses: string[]; port: number };
-    if (!info.addresses.length) return;
-    // In dev the page itself is served on another port than the game server.
-    const port = location.port ? `:${location.port}` : "";
-    const links = info.addresses.map((ip) => `http://${ip}${port}`);
-    $("lan-links").replaceChildren(
-      ...links.map((url) => {
-        const code = document.createElement("code");
-        code.textContent = url;
-        return code;
-      }),
-    );
-    $("lan-box").hidden = false;
+    const info = (await (await fetch("/api/info")).json()) as ServerInfo;
+    dot.classList.remove("off");
+    text.textContent = info.online
+      ? `${info.online} kaptan çevrimiçi, ${info.rooms} açık oda.`
+      : "Şu an lobide kimse yok. İlk sen gir.";
+    if (info.addresses.length) {
+      // In dev the page itself is served on another port than the game server.
+      const port = location.port ? `:${location.port}` : "";
+      $("lan-links").replaceChildren(
+        ...info.addresses.map((ip) => {
+          const code = document.createElement("code");
+          code.textContent = `http://${ip}${port}`;
+          return code;
+        }),
+      );
+      $("lan-box").hidden = false;
+    }
   } catch {
-    /* LAN info is optional */
+    dot.classList.add("off");
+    text.textContent = "Sunucuya ulaşılamıyor.";
   }
+}
+
+// ---------- Entry screen: signal flags and fleet roster ----------
+
+const flagRow = $("flag-row");
+let shownFlags: string[] = [];
+
+function renderFlags(name: string) {
+  const letters = flagLetters(name);
+  const ghost = letters.length === 0;
+  const target = ghost ? flagLetters("Amiral") : letters;
+  flagRow.classList.toggle("ghost", ghost);
+  let keep = 0;
+  while (keep < shownFlags.length && keep < target.length && shownFlags[keep] === target[keep]) keep++;
+  while (flagRow.children.length > keep) flagRow.lastElementChild!.remove();
+  for (const letter of target.slice(keep)) {
+    const el = flagElement(letter);
+    if (!ghost) el.classList.add("hoist");
+    flagRow.append(el);
+  }
+  shownFlags = target;
+}
+
+function renderRoster() {
+  $("fleet-roster").replaceChildren(
+    ...FLEET.map((s) => {
+      const li = document.createElement("li");
+      const strip = document.createElement("span");
+      strip.className = "strip";
+      strip.style.setProperty("--len", String(s.length));
+      strip.append(shipDrawing(s.type));
+      const name = document.createElement("span");
+      name.className = "rname";
+      name.textContent = s.name;
+      const len = document.createElement("span");
+      len.className = "rlen";
+      len.textContent = `${s.length} kare`;
+      li.append(strip, name, len);
+      return li;
+    }),
+  );
 }
 
 function showScreen(name: "name" | "lobby" | "room") {
@@ -635,7 +693,11 @@ $("chat-form").onsubmit = (e) => {
 // ---------- Boot ----------
 
 applyTheme(settings.theme);
-void loadLanInfo();
+renderRoster();
+renderFlags($<HTMLInputElement>("name-input").value);
+$("name-input").addEventListener("input", (e) => renderFlags((e.target as HTMLInputElement).value));
+void refreshInfo();
+setInterval(() => void refreshInfo(), 5000);
 renderLobby();
 if (myName) conn.hello(myName);
 else showScreen("name");

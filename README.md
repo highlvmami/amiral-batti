@@ -11,7 +11,7 @@ WebSocket ile gerçek zamanlı, tarayıcıda iki kişilik Amiral Battı.
 - Oyun içi sohbet
 - İki oyuncu arasında skor tablosu (rövanşlarda korunur)
 - Maç sonu **rövanş**: iki oyuncu da isterse yeni tur başlar, ilk atış sırası değişir
-- **Ayarlar** sekmesi: 4 tema (Gece, Deniz, Açık, Gün batımı) ve ses açma/kapama
+- **Ayarlar** sekmesi: 3 tema (açık renkli Sis varsayılan, Deniz, Gece) ve ses açma/kapama
 - Sayfa yenilense de oyuna geri dönme; 60 saniye dönmeyen oyuncu hükmen kaybeder
 - Sunucu otoriter: rakibin gemileri oyun bitene kadar tarayıcıya hiç gönderilmez
 
