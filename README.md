@@ -1,7 +1,5 @@
 # ⚓ Amiral Battı
 
-[![Render'a yükle](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/highlvmami/amiral-batti)
-
 WebSocket ile gerçek zamanlı, tarayıcıda iki kişilik Amiral Battı.
 
 **Canlı demo:** https://amiral-batti-h2mx.onrender.com (kurulum gerekmez; ücretsiz planda bir süre kullanılmayınca uyur, ilk açılış yarım dakika sürebilir)
