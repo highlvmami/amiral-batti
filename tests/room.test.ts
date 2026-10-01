@@ -12,7 +12,7 @@ const fleet: Placement[] = [
 
 function player(name: string) {
   const inbox: ServerMessage[] = [];
-  const p: Player = { token: name, name, send: (m) => inbox.push(m), room: null };
+  const p: Player = { id: name, token: name, name, send: (m) => inbox.push(m), room: null };
   const last = (): RoomView => {
     const states = inbox.filter((m) => m.type === "room:state");
     return (states.at(-1) as Extract<ServerMessage, { type: "room:state" }>).room;

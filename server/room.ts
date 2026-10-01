@@ -5,6 +5,8 @@ export const FORFEIT_MS = 60_000;
 const CHAT_LIMIT = 100;
 
 export interface Player {
+  /** Public identifier shown to other players; the token stays secret. */
+  id: string;
   token: string;
   name: string;
   send: ((msg: ServerMessage) => void) | null;

@@ -19,6 +19,10 @@ export const ClientMessage = z.discriminatedUnion("type", [
   z.object({ type: z.literal("shot:fire"), x: coord, y: coord }),
   z.object({ type: z.literal("chat:send"), text: z.string().trim().min(1).max(300) }),
   z.object({ type: z.literal("rematch:request") }),
+  z.object({ type: z.literal("lobby:challenge"), id: z.string().max(32) }),
+  z.object({ type: z.literal("lobby:cancel"), id: z.string().max(32) }),
+  z.object({ type: z.literal("lobby:accept"), id: z.string().max(32) }),
+  z.object({ type: z.literal("lobby:decline"), id: z.string().max(32) }),
 ]);
 export type ClientMessage = z.infer<typeof ClientMessage>;
 
@@ -63,8 +67,21 @@ export interface RoomView {
   chat: ChatEntry[];
 }
 
+export interface LobbyPlayer {
+  id: string;
+  name: string;
+  busy: boolean;
+}
+
+export type DeclineReason = "declined" | "expired" | "busy" | "offline";
+
 export type ServerMessage =
   | { type: "welcome"; token: string; name: string }
   | { type: "room:state"; room: RoomView }
   | { type: "room:left" }
+  | { type: "lobby:list"; players: LobbyPlayer[] }
+  | { type: "lobby:invite"; from: { id: string; name: string } }
+  | { type: "lobby:invite-ended"; fromId: string }
+  | { type: "lobby:sent"; id: string }
+  | { type: "lobby:declined"; id: string; name: string; reason: DeclineReason }
   | { type: "error"; message: string };
