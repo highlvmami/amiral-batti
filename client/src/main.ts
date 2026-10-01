@@ -356,9 +356,20 @@ $("name-form").onsubmit = (e) => {
 };
 $("change-name").onclick = () => showScreen("name");
 $("create-room").onclick = () => conn.send({ type: "room:create" });
+// Accepts a bare code or a pasted invite link (…?oda=KOD) and returns the code.
+function roomCodeFrom(text: string): string {
+  const fromLink = text.match(/[?&]oda=([a-z0-9]+)/i)?.[1];
+  return (fromLink ?? text).replace(/[^a-z0-9]/gi, "").toUpperCase().slice(0, 6);
+}
+$("join-code").addEventListener("paste", (e) => {
+  const text = e.clipboardData?.getData("text");
+  if (!text) return;
+  e.preventDefault();
+  $<HTMLInputElement>("join-code").value = roomCodeFrom(text);
+});
 $("join-form").onsubmit = (e) => {
   e.preventDefault();
-  const code = $<HTMLInputElement>("join-code").value.trim().toUpperCase();
+  const code = roomCodeFrom($<HTMLInputElement>("join-code").value);
   if (code.length === 6) conn.send({ type: "room:join", code });
   else toast("Oda kodu 6 karakter olmalı.");
 };
