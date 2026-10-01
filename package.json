@@ -1,0 +1,31 @@
+{
+  "name": "amiral-batti",
+  "version": "0.1.0",
+  "description": "WebSocket ile gerçek zamanlı, tarayıcıda oynanan Amiral Battı",
+  "scripts": {
+    "dev": "concurrently -n sunucu,istemci -c blue,green \"tsx watch server/index.ts\" \"vite\"",
+    "build": "vite build",
+    "start": "tsx server/index.ts",
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "tsx": "^4.23.15",
+    "ws": "^8.22.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@types/ws": "^8.18.2",
+    "concurrently": "^10.0.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.3"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}
