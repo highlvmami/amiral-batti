@@ -1,5 +1,7 @@
 # ⚓ Amiral Battı
 
+[![Render'a yükle](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/highlvmami/amiral-batti)
+
 WebSocket ile gerçek zamanlı, tarayıcıda iki kişilik Amiral Battı.
 
 ## Özellikler
