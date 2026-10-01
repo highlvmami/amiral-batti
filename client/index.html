@@ -107,13 +107,25 @@
                 </div>
                 <div class="board-wrap" id="enemy-wrap">
                   <h3 id="enemy-title">Rakip sular</h3>
-                  <div id="enemy-board" class="board enemy"></div>
+                  <div class="board-stage">
+                    <div id="enemy-board" class="board enemy"></div>
+                    <div id="turn-pill" class="turn-pill" hidden></div>
+                    <div id="board-veil" class="board-veil" hidden>
+                      <div id="veil-wait" class="veil-wait">
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span id="veil-wait-text"></span>
+                      </div>
+                      <div id="finish-tools" class="result-card" hidden>
+                        <strong id="result-title" class="result-title"></strong>
+                        <span id="result-score" class="result-score"></span>
+                        <button id="rematch" class="primary">Rövanş</button>
+                        <span id="rematch-status" class="muted"></span>
+                        <button id="show-board" class="link">Rakip filoyu gör</button>
+                      </div>
+                    </div>
+                    <button id="show-result" class="small show-result" hidden>Sonucu göster</button>
+                  </div>
                 </div>
-              </div>
-
-              <div id="finish-tools" class="card tools center" hidden>
-                <button id="rematch" class="primary">Rövanş</button>
-                <span id="rematch-status"></span>
               </div>
             </div>
 

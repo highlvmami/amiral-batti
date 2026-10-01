@@ -105,7 +105,7 @@ describe("Room", () => {
     room.disconnected(a.p);
     expect(b.last().opponent?.connected).toBe(false);
     vi.advanceTimersByTime(1000);
-    expect(b.last().chat.map((c) => c.text)).toContain("Ayşe kazandı!");
+    expect(b.last().chat.map((c) => c.text)).toContain("Ali geri dönmedi, maç Ayşe adına yazıldı.");
     expect(b.last().phase).toBe("waiting");
     expect(b.last().opponent).toBeNull();
   });

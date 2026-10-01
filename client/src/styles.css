@@ -554,23 +554,6 @@ main {
   margin: 18px auto;
   min-height: 24px;
 }
-.banner.yourturn {
-  width: fit-content;
-  background: var(--flag);
-  color: var(--flag-ink);
-  padding: 6px 18px;
-  border-radius: 999px;
-}
-.banner.win {
-  color: var(--ok);
-  font-size: 1.6rem;
-  font-weight: 800;
-}
-.banner.lose {
-  color: var(--hit);
-  font-size: 1.6rem;
-  font-weight: 800;
-}
 .room-layout {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -627,6 +610,125 @@ main {
 .board-wrap h3 {
   color: var(--muted);
   font-weight: 600;
+}
+
+/* Turn and result overlays on the enemy board */
+.board-stage {
+  position: relative;
+}
+#enemy-wrap.yourturn .board-stage {
+  border-radius: 12px;
+  box-shadow: 0 0 0 3px var(--flag);
+  animation: turn-glow 1.6s ease-in-out infinite;
+}
+.turn-pill {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  z-index: 3;
+  pointer-events: none;
+  white-space: nowrap;
+  background: var(--flag);
+  color: var(--flag-ink);
+  font-weight: 800;
+  padding: 6px 16px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.25);
+}
+.board-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 62%, transparent);
+  backdrop-filter: blur(1.5px);
+}
+.board-veil.win {
+  background: color-mix(in srgb, var(--ok) 22%, color-mix(in srgb, var(--bg) 55%, transparent));
+}
+.board-veil.lose {
+  background: color-mix(in srgb, var(--hit) 18%, color-mix(in srgb, var(--bg) 60%, transparent));
+}
+.veil-wait {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  pointer-events: none;
+}
+.spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  border-top-color: var(--ink);
+  animation: spin 0.9s linear infinite;
+}
+.result-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 26px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.25);
+  animation: pop-in 0.35s ease-out;
+}
+.banner:empty {
+  min-height: 0;
+  margin: 10px auto;
+}
+.result-card span:empty {
+  display: none;
+}
+.result-card[hidden],
+.veil-wait[hidden] {
+  display: none;
+}
+.result-title {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.board-veil.win .result-title {
+  color: var(--ok);
+}
+.board-veil.lose .result-title {
+  color: var(--hit);
+}
+.result-score {
+  font-weight: 700;
+  color: var(--muted);
+}
+.show-result {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+}
+@keyframes turn-glow {
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--flag) 45%, transparent);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pop-in {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
 }
 
 /* Boards */
@@ -970,6 +1072,13 @@ main {
   }
   .chat {
     height: 320px;
+  }
+  /* On phones the enemy board (with the turn badge) comes first. */
+  #enemy-wrap {
+    order: -1;
+  }
+  .result-title {
+    font-size: 1.6rem;
   }
 }
 
