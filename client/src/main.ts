@@ -1,5 +1,5 @@
 import "./styles.css";
-import type { RoomView, ServerMessage } from "../../shared/protocol.js";
+import type { LobbyPlayer, RoomView, ServerMessage } from "../../shared/protocol.js";
 import {
   BOARD_SIZE,
   FLEET,
@@ -89,7 +89,15 @@ let view: RoomView | null = null;
 let myName = localStorage.getItem("ab-name") ?? "";
 const inviteCode = new URLSearchParams(location.search).get("oda")?.toUpperCase() ?? null;
 
-const conn = new Connection(onMessage, (on) => $("conn").classList.toggle("on", on));
+const conn = new Connection(onMessage, (on) => {
+  $("conn").classList.toggle("on", on);
+  if (!on) {
+    online = [];
+    incoming = [];
+    pending.clear();
+    renderLobby();
+  }
+});
 
 function onMessage(msg: ServerMessage) {
   switch (msg.type) {
@@ -107,11 +115,128 @@ function onMessage(msg: ServerMessage) {
       }
       break;
     case "room:state":
+      incoming = [];
+      pending.clear();
       onRoomState(msg.room);
+      break;
+    case "lobby:list":
+      online = msg.players;
+      // A pending invite only makes sense while its target is still in the lobby.
+      for (const id of pending) if (!online.some((p) => p.id === id && !p.busy)) pending.delete(id);
+      renderLobby();
+      break;
+    case "lobby:invite":
+      incoming = [...incoming.filter((i) => i.id !== msg.from.id), msg.from];
+      renderLobby();
+      break;
+    case "lobby:invite-ended":
+      incoming = incoming.filter((i) => i.id !== msg.fromId);
+      renderLobby();
+      break;
+    case "lobby:sent":
+      pending.add(msg.id);
+      renderLobby();
+      break;
+    case "lobby:declined":
+      pending.delete(msg.id);
+      toast(
+        {
+          declined: `${msg.name} davetini reddetti.`,
+          expired: `${msg.name} davete cevap vermedi.`,
+          busy: `${msg.name} başka bir maça geçti.`,
+          offline: `${msg.name} çevrimdışı oldu.`,
+        }[msg.reason],
+      );
+      renderLobby();
       break;
     case "error":
       toast(msg.message);
       break;
+  }
+}
+
+// ---------- LAN lobby ----------
+
+let online: LobbyPlayer[] = [];
+let incoming: { id: string; name: string }[] = [];
+const pending = new Set<string>();
+
+function renderLobby() {
+  const free = online.filter((p) => !p.busy).length;
+  $("online-count").textContent = online.length ? `${free} müsait / ${online.length}` : "";
+  $("online-empty").hidden = online.length > 0;
+
+  $("invites").replaceChildren(
+    ...incoming.map((i) => {
+      const li = document.createElement("li");
+      const text = document.createElement("span");
+      text.textContent = `${i.name} seni maça davet ediyor`;
+      const accept = document.createElement("button");
+      accept.className = "primary small";
+      accept.textContent = "Kabul";
+      accept.onclick = () => conn.send({ type: "lobby:accept", id: i.id });
+      const decline = document.createElement("button");
+      decline.className = "small";
+      decline.textContent = "Reddet";
+      decline.onclick = () => {
+        conn.send({ type: "lobby:decline", id: i.id });
+        incoming = incoming.filter((x) => x.id !== i.id);
+        renderLobby();
+      };
+      li.append(text, accept, decline);
+      return li;
+    }),
+  );
+
+  $("online-list").replaceChildren(
+    ...online.map((p) => {
+      const li = document.createElement("li");
+      const dot = document.createElement("i");
+      dot.className = p.busy ? "dot busy" : "dot";
+      const name = document.createElement("span");
+      name.className = "pname";
+      name.textContent = p.name;
+      const state = document.createElement("span");
+      state.className = "pstate";
+      state.textContent = p.busy ? "Maçta" : "Müsait";
+      const btn = document.createElement("button");
+      btn.className = "small";
+      if (pending.has(p.id)) {
+        btn.textContent = "İptal";
+        btn.onclick = () => {
+          conn.send({ type: "lobby:cancel", id: p.id });
+          pending.delete(p.id);
+          renderLobby();
+        };
+        state.textContent = "Cevap bekleniyor…";
+      } else {
+        btn.textContent = "Meydan oku";
+        btn.disabled = p.busy;
+        btn.onclick = () => conn.send({ type: "lobby:challenge", id: p.id });
+      }
+      li.append(dot, name, state, btn);
+      return li;
+    }),
+  );
+}
+
+async function loadLanInfo() {
+  try {
+    const info = (await (await fetch("/api/info")).json()) as { addresses: string[]; port: number };
+    if (!info.addresses.length) return;
+    // In dev the page itself is served on another port than the game server.
+    const port = location.port ? `:${location.port}` : "";
+    const links = info.addresses.map((ip) => `http://${ip}${port}`);
+    $("lan-links").replaceChildren(
+      ...links.map((url) => {
+        const code = document.createElement("code");
+        code.textContent = url;
+        return code;
+      }),
+    );
+    $("lan-box").hidden = false;
+  } catch {
+    /* LAN info is optional */
   }
 }
 
@@ -510,5 +635,7 @@ $("chat-form").onsubmit = (e) => {
 // ---------- Boot ----------
 
 applyTheme(settings.theme);
+void loadLanInfo();
+renderLobby();
 if (myName) conn.hello(myName);
 else showScreen("name");

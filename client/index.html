@@ -26,15 +26,28 @@
           </form>
         </div>
 
-        <div id="screen-lobby" class="screen card narrow" hidden>
-          <h2>Merhaba, <span id="lobby-name"></span></h2>
-          <button id="create-room" class="primary wide">Yeni oda oluştur</button>
-          <div class="divider">veya</div>
-          <form id="join-form" class="row">
-            <input id="join-code" maxlength="6" placeholder="Oda kodu" required autocomplete="off" />
-            <button type="submit">Katıl</button>
-          </form>
-          <button id="change-name" class="link">İsmi değiştir</button>
+        <div id="screen-lobby" class="screen lobby-grid" hidden>
+          <div class="card">
+            <h2>Merhaba, <span id="lobby-name"></span></h2>
+            <button id="create-room" class="primary wide">Yeni oda oluştur</button>
+            <div class="divider">veya</div>
+            <form id="join-form" class="row">
+              <input id="join-code" maxlength="6" placeholder="Oda kodu" required autocomplete="off" />
+              <button type="submit">Katıl</button>
+            </form>
+            <button id="change-name" class="link">İsmi değiştir</button>
+          </div>
+
+          <div class="card online">
+            <h2>Çevrimiçi oyuncular <span id="online-count" class="count"></span></h2>
+            <ul id="invites" class="invites"></ul>
+            <ul id="online-list" class="player-list"></ul>
+            <p id="online-empty" class="muted">Şu an lobide başka oyuncu yok. Aynı ağdaki arkadaşların aşağıdaki adresi açıp katılabilir.</p>
+            <div id="lan-box" class="lan" hidden>
+              <span>Aynı ağdaki cihazlar için adres:</span>
+              <div id="lan-links"></div>
+            </div>
+          </div>
         </div>
 
         <div id="screen-room" class="screen" hidden>
