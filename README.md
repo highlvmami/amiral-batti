@@ -4,6 +4,8 @@
 
 WebSocket ile gerçek zamanlı, tarayıcıda iki kişilik Amiral Battı.
 
+**Canlı demo:** https://amiral-batti-h2mx.onrender.com (kurulum gerekmez; ücretsiz planda bir süre kullanılmayınca uyur, ilk açılış yarım dakika sürebilir)
+
 ## Özellikler
 
 - 4 gemi: Uçak Gemisi (5), Muhrip (4), Denizaltı (3), Hücumbot (2)
