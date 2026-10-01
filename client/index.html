@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Amiral Battı</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚓</text></svg>" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>⚓ Amiral Battı</h1>
+      <nav class="tabs">
+        <button class="tab active" data-tab="game">Oyun</button>
+        <button class="tab" data-tab="settings">Ayarlar</button>
+      </nav>
+      <span id="conn" class="conn" title="Bağlantı durumu"></span>
+    </header>
+
+    <main>
+      <section id="tab-game">
+        <div id="screen-name" class="screen card narrow">
+          <h2>Kaptan, adın ne?</h2>
+          <form id="name-form" class="row">
+            <input id="name-input" maxlength="20" placeholder="Takma ad" required autocomplete="off" />
+            <button type="submit" class="primary">Devam</button>
+          </form>
+        </div>
+
+        <div id="screen-lobby" class="screen card narrow" hidden>
+          <h2>Merhaba, <span id="lobby-name"></span></h2>
+          <button id="create-room" class="primary wide">Yeni oda oluştur</button>
+          <div class="divider">veya</div>
+          <form id="join-form" class="row">
+            <input id="join-code" maxlength="6" placeholder="Oda kodu" required autocomplete="off" />
+            <button type="submit">Katıl</button>
+          </form>
+          <button id="change-name" class="link">İsmi değiştir</button>
+        </div>
+
+        <div id="screen-room" class="screen" hidden>
+          <div class="roombar card">
+            <div class="code">
+              Oda: <strong id="room-code"></strong>
+              <button id="copy-link" class="small">Davet linkini kopyala</button>
+            </div>
+            <div class="scoreboard" id="scoreboard"></div>
+            <button id="leave-room" class="small danger">Odadan çık</button>
+          </div>
+
+          <div id="banner" class="banner"></div>
+
+          <div class="room-layout">
+            <div class="play-area">
+              <div id="placing-tools" class="card tools" hidden>
+                <div class="ships" id="ship-picker"></div>
+                <div class="row">
+                  <button id="rotate">Döndür (R)</button>
+                  <button id="random">Rastgele diz</button>
+                  <button id="clear">Temizle</button>
+                  <button id="ready" class="primary">Hazırım</button>
+                </div>
+              </div>
+
+              <div class="boards">
+                <div class="board-wrap">
+                  <h3>Senin filon</h3>
+                  <div id="my-board" class="board"></div>
+                </div>
+                <div class="board-wrap" id="enemy-wrap">
+                  <h3 id="enemy-title">Rakip sular</h3>
+                  <div id="enemy-board" class="board"></div>
+                </div>
+              </div>
+
+              <div id="finish-tools" class="card tools center" hidden>
+                <button id="rematch" class="primary">Rövanş</button>
+                <span id="rematch-status"></span>
+              </div>
+            </div>
+
+            <aside class="chat card">
+              <h3>Sohbet</h3>
+              <ul id="chat-log"></ul>
+              <form id="chat-form" class="row">
+                <input id="chat-input" maxlength="300" placeholder="Mesaj yaz…" autocomplete="off" />
+                <button type="submit">Gönder</button>
+              </form>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-settings" class="card narrow" hidden>
+        <h2>Ayarlar</h2>
+        <h3>Tema</h3>
+        <div class="themes" id="themes"></div>
+        <h3>Ses</h3>
+        <label class="check"><input type="checkbox" id="sound" /> Atış seslerini çal</label>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" hidden></div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
