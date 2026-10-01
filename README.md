@@ -35,6 +35,11 @@ npm run build
 npm start          # http://localhost:3000 hem sayfayı hem WebSocket'i sunar
 ```
 
+### Telefondan deneme
+
+- **Aynı Wi-Fi:** Bilgisayarında `npm run build && npm start` çalıştır, konsolda yazan `http://192.168.x.x:3000` adresini telefonda aç.
+- **İnternetten:** Repoyu [Render](https://render.com)'a bağla (New, Blueprint). `render.yaml` hazır; ücretsiz planda WebSocket çalışır, oda durumu sunucu belleğinde tutulur.
+
 ## Komutlar
 
 | Komut | Açıklama |

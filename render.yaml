@@ -1,0 +1,11 @@
+# Render Blueprint: oyunu internetten yayınlamak için (tek sunucu, WebSocket destekli).
+services:
+  - type: web
+    name: amiral-batti
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22
