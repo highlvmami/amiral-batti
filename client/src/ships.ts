@@ -60,10 +60,24 @@ const BODY: Record<ShipType, (w: number) => string> = {
     <line class="m" x1="${w * 0.36 + 10}" y1="50" x2="${w * 0.36 + 10}" y2="36"/>`,
 };
 
+function svgFor(type: ShipType, vertical: boolean): SVGSVGElement {
+  const w = shipLength(type) * 100;
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", vertical ? `0 0 100 ${w}` : `0 0 ${w} 100`);
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.setAttribute("aria-hidden", "true");
+  svg.innerHTML = vertical ? `<g transform="translate(100 0) rotate(90)">${BODY[type](w)}</g>` : BODY[type](w);
+  return svg;
+}
+
+/** A horizontal ship drawing that fills its container, for use outside the board. */
+export function shipDrawing(type: ShipType): SVGSVGElement {
+  return svgFor(type, false);
+}
+
 /** A positioned SVG ship that exactly covers its cells on a 10x10 board. */
 export function shipElement(p: Placement, state: ShipState = "normal"): HTMLElement {
   const len = shipLength(p.type);
-  const w = len * 100;
   const vertical = p.dir === "v";
   const el = document.createElement("div");
   el.className = `ship-svg ${state === "normal" ? "" : state} ${p.type}`.trim();
@@ -71,12 +85,6 @@ export function shipElement(p: Placement, state: ShipState = "normal"): HTMLElem
   el.style.top = `${p.y * 10}%`;
   el.style.width = `${(vertical ? 1 : len) * 10}%`;
   el.style.height = `${(vertical ? len : 1) * 10}%`;
-  const svg = document.createElementNS(NS, "svg");
-  svg.setAttribute("viewBox", vertical ? `0 0 100 ${w}` : `0 0 ${w} 100`);
-  svg.setAttribute("preserveAspectRatio", "none");
-  svg.innerHTML = vertical
-    ? `<g transform="translate(100 0) rotate(90)">${BODY[p.type](w)}</g>`
-    : BODY[p.type](w);
-  el.append(svg);
+  el.append(svgFor(p.type, vertical));
   return el;
 }

@@ -8,7 +8,7 @@
   </head>
   <body>
     <header class="topbar">
-      <h1>⚓ Amiral Battı</h1>
+      <h1 class="brand">Amiral Battı</h1>
       <nav class="tabs">
         <button class="tab active" data-tab="game">Oyun</button>
         <button class="tab" data-tab="settings">Ayarlar</button>
@@ -18,12 +18,38 @@
 
     <main>
       <section id="tab-game">
-        <div id="screen-name" class="screen card narrow">
-          <h2>Kaptan, adın ne?</h2>
-          <form id="name-form" class="row">
-            <input id="name-input" maxlength="20" placeholder="Takma ad" required autocomplete="off" />
-            <button type="submit" class="primary">Devam</button>
-          </form>
+        <div id="screen-name" class="screen entry">
+          <div class="hero">
+            <div class="pennants">
+              <div id="flag-row" class="flag-row" role="img" aria-label="Adın deniz bayraklarıyla yazılmış hali"></div>
+              <p class="caption">Adın, uluslararası seyir bayraklarıyla yazılıyor.</p>
+            </div>
+            <h2 class="headline">Filonu kur, rakibin sularına ateş et.</h2>
+            <p class="lede">Tarayıcıdan iki kişilik Amiral Battı. Aynı ağdaki biriyle ya da bir oda koduyla karşılıklı oyna.</p>
+            <form id="name-form" class="name-form">
+              <label for="name-input">Kaptan adın</label>
+              <div class="row">
+                <input id="name-input" maxlength="20" placeholder="Örn. Barbaros" required autocomplete="off" />
+                <button type="submit" class="primary">Lobiye gir</button>
+              </div>
+            </form>
+            <p class="live"><i id="live-dot" class="dot off"></i><span id="live-text">Sunucuya bağlanılıyor…</span></p>
+          </div>
+
+          <div class="info">
+            <section>
+              <h3>Filon</h3>
+              <ul id="fleet-roster" class="roster"></ul>
+            </section>
+            <section>
+              <h3>Nasıl oynanır</h3>
+              <ol class="steps">
+                <li><b>Gemilerini diz.</b> Tahtaya tek tek yerleştir ya da rastgele dizdir.</li>
+                <li><b>Sırayla ateş et.</b> Rakibin suyunda bir kare seç; isabet, ıska ya da batma haberini hemen alırsın.</li>
+                <li><b>Filoyu batır.</b> Rakibin dört gemisini önce batıran turu kazanır, istersen rövanş iste.</li>
+              </ol>
+            </section>
+          </div>
         </div>
 
         <div id="screen-lobby" class="screen lobby-grid" hidden>
