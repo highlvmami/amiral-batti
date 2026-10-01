@@ -409,12 +409,15 @@ document.addEventListener("keydown", (e) => {
 // ---------- Room rendering ----------
 
 let lastShotCount = { mine: 0, theirs: 0 };
+/** The player closed the end-of-match card to look at the revealed enemy fleet. */
+let resultHidden = false;
 
 function onRoomState(next: RoomView) {
   const prev = view;
   view = next;
   if (!prev || prev.round !== next.round) {
     resetDraft();
+    resultHidden = false;
     lastShotCount = { mine: next.myShots.length, theirs: next.shotsAtMe.length };
   }
   // Play a sound for any new shot.
@@ -441,12 +444,12 @@ function renderRoom() {
 
   const placing = v.phase === "placing" && !v.you.ready;
   $("placing-tools").hidden = !placing;
-  $("finish-tools").hidden = v.phase !== "finished";
   $("enemy-wrap").hidden = v.phase !== "playing" && v.phase !== "finished";
   if (placing) renderShipPicker();
 
   renderMyBoard(v, placing);
   renderEnemyBoard(v);
+  renderBoardStatus(v);
 
   if (v.phase === "finished") {
     const btn = $<HTMLButtonElement>("rematch");
@@ -495,15 +498,8 @@ function renderBanner(v: RoomView) {
         : "Gemilerini yerleştir: bir gemi seç, tahtaya tıkla. Yerleşmiş gemiye tıklayarak taşıyabilirsin.";
       break;
     case "playing":
-      if (v.turn === "you") {
-        text = "Sıra sende! Rakip sulara ateş et.";
-        el.classList.add("yourturn");
-      } else text = `${v.opponent?.name ?? "Rakip"} nişan alıyor…`;
-      if (v.opponent && !v.opponent.connected) text += " (Rakibin bağlantısı koptu, 60 sn içinde dönmezse kazanırsın.)";
-      break;
-    case "finished":
-      text = v.winner === "you" ? "Kazandın! 🎉" : "Kaybettin. Bir dahaki sefere!";
-      el.classList.add(v.winner === "you" ? "win" : "lose");
+      // Turn and result live on the enemy board itself (renderBoardStatus).
+      if (v.opponent && !v.opponent.connected) text = "Rakibin bağlantısı koptu, 60 sn içinde dönmezse kazanırsın.";
       break;
   }
   el.textContent = text;
@@ -656,7 +652,41 @@ function renderEnemyBoard(v: RoomView) {
   });
 }
 
+/** Turn badge, "opponent is aiming" veil and the end-of-match card, drawn over the enemy board. */
+function renderBoardStatus(v: RoomView) {
+  const playing = v.phase === "playing";
+  const finished = v.phase === "finished";
+  const myTurn = playing && v.turn === "you";
+  const won = v.winner === "you";
+
+  $("enemy-wrap").classList.toggle("yourturn", myTurn);
+  const pill = $("turn-pill");
+  pill.hidden = !myTurn;
+  pill.textContent = "Sıra sende! Ateş et";
+
+  const veil = $("board-veil");
+  veil.hidden = !((playing && !myTurn) || (finished && !resultHidden));
+  veil.className = finished ? `board-veil ${won ? "win" : "lose"}` : "board-veil";
+  $("veil-wait").hidden = !playing;
+  $("veil-wait-text").textContent = `${v.opponent?.name ?? "Rakip"} nişan alıyor…`;
+
+  $("finish-tools").hidden = !finished;
+  $("show-result").hidden = !(finished && resultHidden);
+  if (finished) {
+    $("result-title").textContent = won ? "Kazandın! 🎉" : "Kaybettin";
+    $("result-score").textContent = `Skor ${v.you.score} - ${v.opponent?.score ?? 0}`;
+  }
+}
+
 $("rematch").onclick = () => conn.send({ type: "rematch:request" });
+$("show-board").onclick = () => {
+  resultHidden = true;
+  renderRoom();
+};
+$("show-result").onclick = () => {
+  resultHidden = false;
+  renderRoom();
+};
 
 // ---------- Chat ----------
 

@@ -92,6 +92,7 @@ export class Room {
       seat.forfeitTimer = null;
       if (this.phase === "playing") {
         this.finish(1 - this.seatIndex(player));
+        this.system(`${player.name} geri dönmedi, maç ${this.seats[this.winnerIndex!].player.name} adına yazıldı.`);
       }
       this.leave(player);
     }, this.forfeitMs);
@@ -119,7 +120,6 @@ export class Room {
     seat.board = new Board(fleet.map((p) => ({ ...p })));
     if (this.seats.every((s) => s.board)) {
       this.phase = "playing";
-      this.system(`Savaş başladı! İlk atış: ${this.seats[this.turnIndex].player.name}.`);
     }
     this.broadcast();
     return null;
@@ -154,12 +154,7 @@ export class Room {
     if (!seat) return "Odada değilsin.";
     if (this.phase !== "finished") return "Rövanş yalnızca maç bitince istenebilir.";
     seat.wantsRematch = true;
-    if (this.isFull && this.seats.every((s) => s.wantsRematch)) {
-      this.system("Rövanş başlıyor!");
-      this.startRound();
-    } else {
-      this.system(`${player.name} rövanş istiyor.`);
-    }
+    if (this.isFull && this.seats.every((s) => s.wantsRematch)) this.startRound();
     this.broadcast();
     return null;
   }
@@ -211,7 +206,6 @@ export class Room {
     this.phase = "finished";
     this.winnerIndex = winner;
     this.seats[winner].score += 1;
-    this.system(`${this.seats[winner].player.name} kazandı!`);
   }
 
   private playerView(s: Seat) {
