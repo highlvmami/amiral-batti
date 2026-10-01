@@ -13,6 +13,7 @@ import {
 } from "../../shared/rules.js";
 import { Connection } from "./net.js";
 import { flagElement, flagLetters } from "./flags.js";
+import { formatWhen, loadHistory, recordFromRoom, saveRecord } from "./history.js";
 import { shipDrawing, shipElement, type ShipState } from "./ships.js";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -298,10 +299,40 @@ function renderRoster() {
   );
 }
 
+// ---------- Recent matches (kept in this browser only) ----------
+
+function renderHistory() {
+  const list = loadHistory(localStorage);
+  document.querySelectorAll<HTMLElement>(".recent").forEach((box) => {
+    box.querySelector<HTMLElement>(".history-empty")!.hidden = list.length > 0;
+    box.querySelector(".history")!.replaceChildren(
+      ...list.map((r) => {
+        const li = document.createElement("li");
+        li.className = r.won ? "won" : "lost";
+        const badge = document.createElement("span");
+        badge.className = "result";
+        badge.textContent = r.won ? "Kazandın" : "Kaybettin";
+        const who = document.createElement("span");
+        who.className = "vs";
+        who.textContent = r.opponent;
+        const score = document.createElement("span");
+        score.className = "hscore";
+        score.textContent = `${r.score[0]} - ${r.score[1]}`;
+        const meta = document.createElement("span");
+        meta.className = "hmeta";
+        meta.textContent = `${r.shots} atış · ${formatWhen(r.ts)}`;
+        li.append(badge, who, score, meta);
+        return li;
+      }),
+    );
+  });
+}
+
 function showScreen(name: "name" | "lobby" | "room") {
   $("screen-name").hidden = name !== "name";
   $("screen-lobby").hidden = name !== "lobby";
   $("screen-room").hidden = name !== "room";
+  if (name !== "room") renderHistory();
 }
 
 let toastTimer = 0;
@@ -429,6 +460,11 @@ function onRoomState(next: RoomView) {
         : undefined;
   if (newShot) beep(newShot.outcome);
   lastShotCount = { mine: next.myShots.length, theirs: next.shotsAtMe.length };
+
+  if (next.phase === "finished" && prev?.phase !== "finished") {
+    const record = recordFromRoom(next);
+    if (record && saveRecord(localStorage, record)) renderHistory();
+  }
 
   showScreen("room");
   renderRoom();
@@ -724,6 +760,7 @@ $("chat-form").onsubmit = (e) => {
 
 applyTheme(settings.theme);
 renderRoster();
+renderHistory();
 renderFlags($<HTMLInputElement>("name-input").value);
 $("name-input").addEventListener("input", (e) => renderFlags((e.target as HTMLInputElement).value));
 void refreshInfo();
