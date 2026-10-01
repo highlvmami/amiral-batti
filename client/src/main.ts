@@ -11,6 +11,7 @@ import {
   type ShipType,
 } from "../../shared/rules.js";
 import { Connection } from "./net.js";
+import { shipElement, type ShipState } from "./ships.js";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const COLS = "ABCDEFGHIJ";
@@ -358,25 +359,37 @@ interface BoardOpts {
   onClick?: (x: number, y: number) => void;
   onHover?: (c: [number, number] | null) => void;
 }
+interface DrawnShip {
+  p: Placement;
+  state: ShipState;
+}
 const boardOpts = new WeakMap<HTMLElement, BoardOpts>();
 
-/** Creates the grid once, then only updates cell classes so hovering never replaces elements. */
-function buildBoard(el: HTMLElement, classes: CellClass, opts: BoardOpts) {
+function labels(cls: string, texts: string[]): HTMLElement {
+  const box = document.createElement("div");
+  box.className = cls;
+  box.replaceChildren(
+    ...texts.map((t) => {
+      const l = document.createElement("span");
+      l.textContent = t;
+      return l;
+    }),
+  );
+  return box;
+}
+
+/** Builds the sea once; later renders only update cell classes and the ship layer, so hovering never replaces cells. */
+function buildBoard(el: HTMLElement, classes: CellClass, ships: DrawnShip[], opts: BoardOpts) {
   boardOpts.set(el, opts);
   el.classList.toggle("clickable", opts.clickable);
   if (!el.childElementCount) {
-    const nodes: HTMLElement[] = [document.createElement("span")];
-    for (let x = 0; x < BOARD_SIZE; x++) {
-      const l = document.createElement("span");
-      l.className = "label";
-      l.textContent = COLS[x];
-      nodes.push(l);
-    }
+    const sea = document.createElement("div");
+    sea.className = "sea";
+    const shipLayer = document.createElement("div");
+    shipLayer.className = "ship-layer";
+    const grid = document.createElement("div");
+    grid.className = "grid";
     for (let y = 0; y < BOARD_SIZE; y++) {
-      const l = document.createElement("span");
-      l.className = "label";
-      l.textContent = String(y + 1);
-      nodes.push(l);
       for (let x = 0; x < BOARD_SIZE; x++) {
         const c = document.createElement("button");
         c.title = `${COLS[x]}${y + 1}`;
@@ -387,38 +400,49 @@ function buildBoard(el: HTMLElement, classes: CellClass, opts: BoardOpts) {
           if (o?.clickable) o.onClick?.(x, y);
         };
         c.onmouseenter = () => boardOpts.get(el)?.onHover?.([x, y]);
-        nodes.push(c);
+        grid.append(c);
       }
     }
-    el.replaceChildren(...nodes);
-    el.onmouseleave = () => boardOpts.get(el)?.onHover?.(null);
+    grid.onmouseleave = () => boardOpts.get(el)?.onHover?.(null);
+    sea.append(shipLayer, grid);
+    el.append(
+      document.createElement("span"),
+      labels("cols", COLS.split("")),
+      labels("rows", Array.from({ length: BOARD_SIZE }, (_, i) => String(i + 1))),
+      sea,
+    );
   }
-  el.querySelectorAll<HTMLElement>(".cell, button[data-x]").forEach((c) => {
-    const k = key(Number(c.dataset.x), Number(c.dataset.y));
-    c.className = ["cell", ...(classes[k] ?? [])].filter(Boolean).join(" ");
+  el.querySelectorAll<HTMLElement>(".grid > button").forEach((c) => {
+    c.className = ["cell", ...(classes[key(Number(c.dataset.x), Number(c.dataset.y))] ?? [])].filter(Boolean).join(" ");
   });
+  el.querySelector(".ship-layer")!.replaceChildren(...ships.map((d) => shipElement(d.p, d.state)));
+}
+
+function isSunk(p: Placement, hits: Set<string>): boolean {
+  return shipCells(p).every(([x, y]) => hits.has(key(x, y)));
+}
+
+function shotMarks(classes: CellClass, shots: RoomView["myShots"]) {
+  shots.forEach((s, i) =>
+    mark(classes, s.x, s.y, "shot", s.outcome === "miss" ? "miss" : "hit", i === shots.length - 1 ? "last" : ""),
+  );
 }
 
 function renderMyBoard(v: RoomView, placing: boolean) {
   const classes: CellClass = {};
   const fleet = placing ? draft : (v.myFleet ?? []);
-  for (const p of fleet) for (const [x, y] of shipCells(p)) mark(classes, x, y, "ship");
+  const hits = new Set(v.shotsAtMe.filter((s) => s.outcome !== "miss").map((s) => key(s.x, s.y)));
+  const ships: DrawnShip[] = fleet.map((p) => ({ p, state: isSunk(p, hits) ? "sunk" : "normal" }));
   if (placing) {
     const p = previewPlacement();
     if (p) {
       const ok = validatePartial([...draft.filter((d) => d.type !== p.type), p]);
-      for (const [x, y] of shipCells(p)) mark(classes, x, y, "preview", ok ? "" : "bad");
+      ships.push({ p, state: ok ? "preview" : "bad" });
     }
   }
-  const hitAtMe = new Set(v.shotsAtMe.filter((s) => s.outcome !== "miss").map((s) => key(s.x, s.y)));
-  for (const p of fleet) {
-    const cells = shipCells(p);
-    if (cells.every(([x, y]) => hitAtMe.has(key(x, y)))) for (const [x, y] of cells) mark(classes, x, y, "sunk");
-  }
-  v.shotsAtMe.forEach((s, i) =>
-    mark(classes, s.x, s.y, "shot", s.outcome === "miss" ? "miss" : "hit", i === v.shotsAtMe.length - 1 ? "last" : ""),
-  );
-  buildBoard($("my-board"), classes, {
+  for (const d of ships) if (d.state === "sunk") for (const [x, y] of shipCells(d.p)) mark(classes, x, y, "sunk");
+  shotMarks(classes, v.shotsAtMe);
+  buildBoard($("my-board"), classes, ships, {
     clickable: placing,
     onClick: placeAt,
     onHover: placing
@@ -433,14 +457,14 @@ function renderMyBoard(v: RoomView, placing: boolean) {
 function renderEnemyBoard(v: RoomView) {
   if (v.phase !== "playing" && v.phase !== "finished") return;
   const classes: CellClass = {};
-  if (v.enemyFleet) for (const p of v.enemyFleet) for (const [x, y] of shipCells(p)) mark(classes, x, y, "reveal");
+  const sunkTypes = new Set(v.enemySunk.map((p) => p.type));
+  const visible = v.enemyFleet ?? v.enemySunk;
+  const ships: DrawnShip[] = visible.map((p) => ({ p, state: sunkTypes.has(p.type) ? "sunk" : "normal" }));
   for (const p of v.enemySunk) for (const [x, y] of shipCells(p)) mark(classes, x, y, "sunk");
-  v.myShots.forEach((s, i) =>
-    mark(classes, s.x, s.y, "shot", s.outcome === "miss" ? "miss" : "hit", i === v.myShots.length - 1 ? "last" : ""),
-  );
+  shotMarks(classes, v.myShots);
   $("enemy-title").textContent = v.opponent ? `${v.opponent.name} filosu` : "Rakip sular";
   const myTurn = v.phase === "playing" && v.turn === "you";
-  buildBoard($("enemy-board"), classes, {
+  buildBoard($("enemy-board"), classes, ships, {
     clickable: myTurn,
     onClick: (x, y) => {
       if (v.myShots.some((s) => s.x === x && s.y === y)) return;

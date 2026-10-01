@@ -3,62 +3,74 @@
 }
 :root,
 [data-theme="gece"] {
-  --bg: #0b1424;
+  --bg: #0a1220;
   --panel: #13213a;
   --panel-2: #1b2d4d;
   --text: #e6edf7;
   --muted: #8ea3c2;
   --accent: #3fa7ff;
-  --water: #16365e;
-  --water-hover: #22507f;
-  --ship: #8c9bb0;
+  --sea-a: #2b78b0;
+  --sea-b: #0a2a4d;
+  --frame: #2c3c55;
+  --hull: #8795a6;
+  --deck: #b0bcc9;
+  --hull-dark: #4b5666;
   --hit: #ff5a4f;
-  --miss: #5f7a99;
+  --miss: #cfe4f5;
   --sunk: #9b1c1c;
   --ok: #3ccf8e;
 }
 [data-theme="deniz"] {
-  --bg: #04303a;
+  --bg: #03262f;
   --panel: #0a4250;
   --panel-2: #0f5566;
   --text: #e9fbff;
   --muted: #9fd3de;
   --accent: #ffd166;
-  --water: #0e7490;
-  --water-hover: #1597b5;
-  --ship: #c8b98f;
+  --sea-a: #21b4d4;
+  --sea-b: #07586f;
+  --frame: #14586a;
+  --hull: #aaa58f;
+  --deck: #d1cbb0;
+  --hull-dark: #6b6757;
   --hit: #ff6b4a;
-  --miss: #6bb3c4;
+  --miss: #e6fbff;
   --sunk: #a8321c;
   --ok: #7ee2a8;
 }
 [data-theme="acik"] {
-  --bg: #eef3f9;
+  --bg: #e8eff7;
   --panel: #ffffff;
   --panel-2: #e3ebf5;
   --text: #13213a;
   --muted: #5b6b82;
   --accent: #1f6feb;
-  --water: #bcd8f2;
-  --water-hover: #93bfe9;
-  --ship: #5b6b82;
+  --sea-a: #7fc0ee;
+  --sea-b: #2f78bd;
+  --frame: #aebfd6;
+  --hull: #6a7686;
+  --deck: #939fb0;
+  --hull-dark: #424c5a;
   --hit: #e5372d;
-  --miss: #8aa6c4;
+  --miss: #ffffff;
   --sunk: #8e1b1b;
   --ok: #188a55;
 }
 [data-theme="gunbatimi"] {
-  --bg: #24132b;
+  --bg: #1f0f26;
   --panel: #3a1d3f;
   --panel-2: #4d2752;
   --text: #ffeedd;
   --muted: #d9a7b5;
   --accent: #ff9f43;
-  --water: #5b2a63;
-  --water-hover: #7a3a84;
-  --ship: #e0b48a;
+  --sea-a: #b0507f;
+  --sea-b: #3a1d4a;
+  --frame: #63306a;
+  --hull: #bca28f;
+  --deck: #dcc3ab;
+  --hull-dark: #6d5646;
   --hit: #ff4d6d;
-  --miss: #9d6fa3;
+  --miss: #ffe9d6;
   --sunk: #8d0f2e;
   --ok: #ffd166;
 }
@@ -69,7 +81,8 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
+  background: radial-gradient(ellipse at 50% -10%, var(--panel-2), var(--bg) 65%) fixed;
+  min-height: 100vh;
   color: var(--text);
   transition: background 0.2s, color 0.2s;
 }
@@ -184,6 +197,7 @@ main {
   background: var(--panel);
   border-radius: 12px;
   padding: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 .narrow {
   max-width: 420px;
@@ -296,7 +310,7 @@ main {
 .ships .bar i {
   width: 10px;
   height: 10px;
-  background: var(--ship);
+  background: var(--hull);
   border-radius: 2px;
 }
 .ships button.placed {
@@ -315,73 +329,235 @@ main {
 }
 .board {
   display: grid;
-  grid-template-columns: repeat(11, 1fr);
-  gap: 2px;
+  grid-template-columns: 22px 1fr;
+  grid-template-rows: 22px auto;
   user-select: none;
 }
-.board .label {
+.cols,
+.rows {
+  display: grid;
+  font-size: 11px;
+  color: var(--muted);
+}
+.cols {
+  grid-template-columns: repeat(10, 1fr);
+}
+.rows {
+  grid-template-rows: repeat(10, 1fr);
+}
+.cols span,
+.rows span {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  color: var(--muted);
+}
+.sea {
+  position: relative;
   aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 6px;
+  background:
+    radial-gradient(ellipse at 25% 15%, var(--sea-a), transparent 70%),
+    linear-gradient(160deg, var(--sea-a), var(--sea-b));
+  box-shadow:
+    inset 0 0 36px rgba(0, 0, 0, 0.45),
+    0 0 0 4px var(--frame),
+    0 10px 26px rgba(0, 0, 0, 0.4);
+}
+.sea::before {
+  content: "";
+  position: absolute;
+  inset: -24px -80px;
+  opacity: 0.22;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='24'%3E%3Cpath d='M0 12 Q20 0 40 12 T80 12' fill='none' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E");
+  animation: drift 7s linear infinite;
+}
+@keyframes drift {
+  to {
+    transform: translate(80px, 12px);
+  }
+}
+.board.enemy .sea::after {
+  content: "";
+  position: absolute;
+  left: -50%;
+  top: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg, transparent 0 300deg, rgba(150, 255, 200, 0.22) 360deg);
+  animation: spin 5s linear infinite;
+  pointer-events: none;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  z-index: 2;
 }
 .cell {
-  aspect-ratio: 1;
-  background: var(--water);
-  border-radius: 3px;
   position: relative;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
   padding: 0;
+  cursor: default;
 }
 .board.clickable .cell:not(.shot) {
   cursor: crosshair;
 }
 .board.clickable .cell:not(.shot):hover {
-  background: var(--water-hover);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
-.cell.ship {
-  background: var(--ship);
+.cell:hover:not(:disabled) {
+  filter: none;
 }
-.cell.preview {
-  background: var(--ok);
-  opacity: 0.7;
+.ship-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
 }
-.cell.preview.bad {
-  background: var(--hit);
+.ship-svg {
+  position: absolute;
+  filter: drop-shadow(2px 4px 2px rgba(0, 0, 0, 0.5));
+  transition: filter 0.4s, opacity 0.2s;
 }
-.cell.miss::after,
+.ship-svg svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.ship-svg .foam {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 7;
+}
+.ship-svg .h {
+  fill: var(--hull);
+  stroke: rgba(0, 0, 0, 0.5);
+  stroke-width: 2;
+}
+.ship-svg .d {
+  fill: var(--deck);
+}
+.ship-svg .s {
+  fill: var(--hull-dark);
+  stroke: rgba(0, 0, 0, 0.45);
+  stroke-width: 1.5;
+}
+.ship-svg .w {
+  fill: #eef3f8;
+}
+.ship-svg .m {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.8);
+  stroke-width: 2;
+}
+.ship-svg.sunk {
+  filter: brightness(0.38) sepia(0.5) drop-shadow(2px 4px 2px rgba(0, 0, 0, 0.5));
+  opacity: 0.92;
+}
+.ship-svg.preview {
+  opacity: 0.8;
+  filter: drop-shadow(0 0 6px var(--ok));
+}
+.ship-svg.bad {
+  opacity: 0.8;
+  filter: drop-shadow(0 0 6px var(--hit));
+}
+.ship-svg.bad .h,
+.ship-svg.bad .d {
+  fill: var(--hit);
+}
+
+.cell.miss::after {
+  content: "";
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
+  border: 2px solid var(--miss);
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.18);
+  animation: ripple 0.9s ease-out;
+}
+@keyframes ripple {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 .cell.hit::after {
   content: "";
   position: absolute;
-  inset: 35%;
+  inset: 8%;
   border-radius: 50%;
-  background: var(--miss);
+  background: radial-gradient(circle, #fff6b0 0 14%, #ffb02e 34%, #ff4d1a 60%, rgba(255, 60, 0, 0) 74%);
+  filter: drop-shadow(0 0 6px #ff7a1a);
+  animation: flicker 0.6s ease-in-out infinite alternate;
 }
-.cell.hit {
-  background: var(--hit);
+.cell.hit.last::after {
+  animation:
+    boom 0.5s ease-out,
+    flicker 0.6s 0.5s ease-in-out infinite alternate;
 }
-.cell.hit::after {
-  background: #fff;
-  inset: 38%;
+.cell.sunk::after {
+  background: radial-gradient(circle, #ff9d3d 0 12%, #b32d0f 36%, rgba(60, 10, 0, 0) 74%);
 }
-.cell.sunk {
-  background: var(--sunk);
+.cell.sunk::before {
+  content: "";
+  position: absolute;
+  left: 28%;
+  top: -6%;
+  width: 44%;
+  height: 44%;
+  border-radius: 50%;
+  background: rgba(25, 25, 25, 0.65);
+  filter: blur(4px);
+  animation: smoke 2.6s ease-out infinite;
 }
-.cell.reveal {
-  outline: 2px dashed var(--ship);
-  outline-offset: -3px;
+@keyframes flicker {
+  from {
+    transform: scale(0.88);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(1.05);
+    opacity: 1;
+  }
 }
-.cell.last {
-  animation: pop 0.5s ease-out;
-}
-@keyframes pop {
+@keyframes boom {
   0% {
-    transform: scale(1.4);
-    filter: brightness(1.8);
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.7);
+    opacity: 1;
   }
   100% {
     transform: scale(1);
+  }
+}
+@keyframes smoke {
+  from {
+    transform: translateY(40%) scale(0.6);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(-120%) scale(1.5);
+    opacity: 0;
   }
 }
 
